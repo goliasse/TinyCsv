@@ -95,13 +95,13 @@ namespace TinyCsv.Tests
         public void Should_only_assume_quotes_if_initial_character_is_a_quote()
         {
             // Given
-            var line = "this,that,\"the other\"";
+            var line = "this,that,the \"other\"";
 
             // When
             var result = this._processor.Process(line);
 
             // Then
-            result.SequenceEqual(new[] { "this", "that", "\"the other\"" }).ShouldBeTrue();
+            result.SequenceEqual(new[] { "this", "that", "the \"other\"" }).ShouldBeTrue();
         }
     }
 }
