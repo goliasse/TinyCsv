@@ -6,11 +6,11 @@ namespace TinyCsv.Tests
 {
     public class LineProcessorFixture
     {
-        private LineProcessor _processor;
+        private readonly LineProcessor _processor;
 
         public LineProcessorFixture()
         {
-            this._processor = LineProcessor.Csv;
+            this._processor = new LineProcessor(',');
         }
 
         [Fact]
@@ -82,7 +82,7 @@ namespace TinyCsv.Tests
         public void Should_handle_escaped_quotes()
         {
             // Given
-            var line = "\"this\",\"that\",'the\'\'other'";
+            var line = "\"this\",\"that\",'the''other'";
 
             // When
             var result = this._processor.Process(line);
@@ -102,6 +102,19 @@ namespace TinyCsv.Tests
 
             // Then
             result.SequenceEqual(new[] { "this", "that", "the \"other\"" }).ShouldBeTrue();
+        }
+
+        [Fact]
+        public void Should_not_consider_value_quoted_if_closing_quote_not_at_end()
+        {
+            // Given
+            var line = "'thi's,that,the other";
+
+            // When
+            var result = this._processor.Process(line);
+
+            // Then
+            result.SequenceEqual(new[] { "'thi's", "that", "the other" }).ShouldBeTrue();
         }
     }
 }
