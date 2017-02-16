@@ -61,8 +61,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Fakes\FakeLineProcessor.cs" />
+    <Compile Include="Fakes\FakeLineReader.cs" />
+    <Compile Include="FileProcessorFixture.cs" />
     <Compile Include="LineProcessorFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StringLineReaderFixture.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

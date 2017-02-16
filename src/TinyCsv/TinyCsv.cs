@@ -1,11 +1,69 @@
-﻿// https://github.com/grumpydev/TinyCsv
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace TinyCsv
 {
-    public class LineProcessor
+    public interface ILineReader
+    {
+        string GetNextLine();
+    }
+
+    public class StringLineReader : ILineReader
+    {
+        private readonly string[] _contentLines;
+        private int _currentIndex = 0;
+
+        public StringLineReader(string contents)
+        {
+            _contentLines = Regex.Split(contents, "\r\n|\r|\n");
+        }
+
+        public string GetNextLine()
+        {
+            if (this._currentIndex >= this._contentLines.Length)
+            {
+                return null;
+            }
+
+            return this._contentLines[this._currentIndex++];
+        }
+    }
+
+    public class FileProcessor
+    {
+        private readonly ILineReader _reader;
+        private readonly ILineProcessor _processor;
+
+        public FileProcessor(ILineReader reader, ILineProcessor processor)
+        {
+            _reader = reader;
+            _processor = processor;
+        }
+
+        public IEnumerable<IEnumerable<string>> Process()
+        {
+            string current = null;
+            do
+            {
+                current = _reader.GetNextLine();
+
+                if (current != null)
+                {
+                    yield return this._processor.Process(current);
+                }
+
+            } while (current != null);
+        }
+    }
+
+    public interface ILineProcessor
+    {
+        IEnumerable<string> Process(string line);
+    }
+
+    public class LineProcessor : ILineProcessor
     {
         private static readonly char[] DefaultQuoteCharacters = {'\'', '"'};
 
