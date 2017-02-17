@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Should;
 using Xunit;
 
@@ -7,7 +8,7 @@ namespace TinyCsv.Tests
     public class StringLineReaderFixture
     {
         [Fact]
-        public void Should_return_all_lines_then_null()
+        public async Task Should_return_all_lines_then_null()
         {
             // Given
             var input = "this\nthat\nthe other";
@@ -18,7 +19,7 @@ namespace TinyCsv.Tests
             string current = null;
             do
             {
-                current = reader.GetNextLine();
+                current = await reader.GetNextLine();
 
                 output.Add(current);
             } while (current != null);

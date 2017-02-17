@@ -28,12 +28,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace TinyCsv
 {
     public interface ILineReader
     {
-        string GetNextLine();
+        int? NumberOfLines { get; }
+
+        Task<string> GetNextLine();
     }
 
     public class StringLineReader : ILineReader
@@ -46,14 +49,19 @@ namespace TinyCsv
             _contentLines = Regex.Split(contents, "\r\n|\r|\n");
         }
 
-        public string GetNextLine()
+        public int? NumberOfLines
+        {
+            get { return this._contentLines.Length; }
+        }
+
+        public Task<string> GetNextLine()
         {
             if (this._currentIndex >= this._contentLines.Length)
             {
-                return null;
+                return Task.FromResult<string>(null);
             }
 
-            return this._contentLines[this._currentIndex++];
+            return Task.FromResult(this._contentLines[this._currentIndex++]);
         }
     }
 
@@ -68,19 +76,24 @@ namespace TinyCsv
             _processor = processor;
         }
 
-        public IEnumerable<IEnumerable<string>> Process()
+        public async Task<IEnumerable<IEnumerable<string>>> Process()
         {
+            var numberOfLines = this._reader.NumberOfLines;
+            var lines = numberOfLines.HasValue ? new List<IEnumerable<string>>(numberOfLines.Value) : new List<IEnumerable<string>>();
             string current = null;
+
             do
             {
-                current = _reader.GetNextLine();
+                current = await _reader.GetNextLine();
 
                 if (current != null)
                 {
-                    yield return this._processor.Process(current);
+                    lines.Add(this._processor.Process(current));
                 }
 
             } while (current != null);
+
+            return lines;
         }
     }
 
@@ -189,7 +202,7 @@ namespace TinyCsv
 
     public static class Process
     {
-        public static IEnumerable<IEnumerable<string>> FromCommaSeparatedString(string input, char[] quoteCharacters = null)
+        public static Task<IEnumerable<IEnumerable<string>>> FromCommaSeparatedString(string input, char[] quoteCharacters = null)
         {
             var reader = new StringLineReader(input);
             var processor = new LineProcessor(',', quoteCharacters);
@@ -197,7 +210,7 @@ namespace TinyCsv
             return Execute(reader, processor);
         }        
         
-        public static IEnumerable<IEnumerable<string>> FromTabSeparatedString(string input, char[] quoteCharacters = null)
+        public static Task<IEnumerable<IEnumerable<string>>> FromTabSeparatedString(string input, char[] quoteCharacters = null)
         {
             var reader = new StringLineReader(input);
             var processor = new LineProcessor('\t', quoteCharacters);
@@ -205,7 +218,7 @@ namespace TinyCsv
             return Execute(reader, processor);
         }
 
-        private static IEnumerable<IEnumerable<string>> Execute(ILineReader reader, ILineProcessor processor)
+        private static Task<IEnumerable<IEnumerable<string>>> Execute(ILineReader reader, ILineProcessor processor)
         {
             var fileProcessor = new FileProcessor(reader, processor);
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace TinyCsv.Tests.Fakes
 {
@@ -13,9 +14,14 @@ namespace TinyCsv.Tests.Fakes
             this._lines = lines.ToArray();
         }
 
-        public string GetNextLine()
+        public int? NumberOfLines
         {
-            return _currentIndex == _lines.Length ? null : _lines[_currentIndex++];
+            get { return this._lines.Length; }
+        }
+
+        public Task<string> GetNextLine()
+        {
+            return Task.FromResult(_currentIndex == _lines.Length ? null : _lines[_currentIndex++]);
         }
     }
 }
