@@ -24,7 +24,9 @@
 // SOFTWARE.
 //===============================================================================
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -32,7 +34,7 @@ using System.Threading.Tasks;
 
 namespace TinyCsv
 {
-    public interface ILineReader
+    public interface ILineReader : IDisposable
     {
         int? NumberOfLines { get; }
 
@@ -62,6 +64,54 @@ namespace TinyCsv
             }
 
             return Task.FromResult(this._contentLines[this._currentIndex++]);
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+
+    public class StreamLineReader : ILineReader
+    {
+        private readonly Encoding _encoding;
+        private StreamReader _reader;
+
+        public int? NumberOfLines
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        public StreamLineReader(Stream input, Encoding encoding = null)
+        {
+            this._encoding = encoding ?? Encoding.Default;
+            this._reader = new StreamReader(input, this._encoding);
+        }
+
+        public Task<string> GetNextLine()
+        {
+            return this._reader.ReadLineAsync();
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_reader != null) _reader.Dispose();
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~StreamLineReader()
+        {
+            Dispose(false);
         }
     }
 
@@ -213,6 +263,22 @@ namespace TinyCsv
         public static Task<IEnumerable<IEnumerable<string>>> FromTabSeparatedString(string input, char[] quoteCharacters = null)
         {
             var reader = new StringLineReader(input);
+            var processor = new LineProcessor('\t', quoteCharacters);
+
+            return Execute(reader, processor);
+        }
+
+        public static Task<IEnumerable<IEnumerable<string>>> FromCommaSeparatedStream(Stream input, Encoding encoding = null, char[] quoteCharacters = null)
+        {
+            var reader = new StreamLineReader(input);
+            var processor = new LineProcessor(',', quoteCharacters);
+
+            return Execute(reader, processor);
+        }
+
+        public static Task<IEnumerable<IEnumerable<string>>> FromTabSeparatedString(Stream input, Encoding encoding = null, char[] quoteCharacters = null)
+        {
+            var reader = new StreamLineReader(input);
             var processor = new LineProcessor('\t', quoteCharacters);
 
             return Execute(reader, processor);

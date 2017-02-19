@@ -23,5 +23,10 @@ namespace TinyCsv.Tests.Fakes
         {
             return Task.FromResult(_currentIndex == _lines.Length ? null : _lines[_currentIndex++]);
         }
+
+        public void Dispose()
+        {
+
+        }
     }
 }
