@@ -134,7 +134,7 @@ namespace TinyCsv
 
             do
             {
-                current = await _reader.GetNextLine();
+                current = await this._reader.GetNextLine();
 
                 if (current != null)
                 {
@@ -142,6 +142,8 @@ namespace TinyCsv
                 }
 
             } while (current != null);
+
+            this._reader.Dispose();
 
             return lines;
         }

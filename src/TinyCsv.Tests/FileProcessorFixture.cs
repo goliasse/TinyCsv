@@ -27,5 +27,21 @@ namespace TinyCsv.Tests
             processor.PassedLines[1].ShouldEqual("Two");
             processor.PassedLines[2].ShouldEqual("Three");
         }
+
+        [Fact]
+        public async Task Should_dispose_of_reader_when_finished()
+        {
+            // Given
+            var lines = new []{ "One", "Two", "Three" };
+            var reader = new FakeLineReader(lines);
+            var processor = new FakeLineProcessor();
+            var fileProcessor = new FileProcessor(reader, processor);
+
+            // When
+            var result = (await fileProcessor.Process()).ToArray();
+
+            // Then
+            reader.Disposed.ShouldBeTrue();
+        }
     }
 }

@@ -8,6 +8,7 @@ namespace TinyCsv.Tests.Fakes
     {
         private int _currentIndex = 0;
         private readonly string[] _lines;
+        public bool Disposed { get; set; }
 
         public FakeLineReader(IEnumerable<string> lines)
         {
@@ -26,7 +27,8 @@ namespace TinyCsv.Tests.Fakes
 
         public void Dispose()
         {
-
+            this.Disposed = true;
         }
+
     }
 }
