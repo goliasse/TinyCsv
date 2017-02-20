@@ -126,6 +126,8 @@ namespace TinyCsv
             _processor = processor;
         }
 
+        public int Skip { get; set; }
+
         public async Task<IEnumerable<IEnumerable<string>>> Process()
         {
             var numberOfLines = this._reader.NumberOfLines;
@@ -162,6 +164,8 @@ namespace TinyCsv
 
         private readonly char[] _quoteCharacters;
 
+        public int SkipLines { get; set; }
+
         public LineProcessor(char separator, char[] quoteCharacters = null)
         {
             this._separator = separator;
@@ -182,7 +186,7 @@ namespace TinyCsv
                 if (this.IsSeparator(currentCharacter) && !currentQuoteCharacter.HasValue)
                 {
                     yield return currentValueBuilder.ToString();
-                    
+
                     currentValueBuilder.Clear();
 
                     currentCharacterIndex++;
@@ -249,6 +253,60 @@ namespace TinyCsv
         private bool IsSeparator(char currentCharacter)
         {
             return currentCharacter == _separator;
+        }
+    }
+
+    public interface IBuilder
+    {
+
+    }
+
+    public interface IBuilder<out TReader> : IBuilder
+    {
+        TReader LineReader { get; }
+
+        ILineProcessor LineProcessor { get; }
+        
+        FileProcessor FileProcessor { get; }
+    }
+
+    public class Builder<TReader> : IBuilder<TReader>
+    {
+        public Builder(TReader reader, ILineProcessor processor, FileProcessor fileProcessor)
+        {
+            LineReader = reader;
+            LineProcessor = processor;
+            FileProcessor = fileProcessor;
+        }
+
+        public TReader LineReader { get; private set; }
+
+        public ILineProcessor LineProcessor { get; private set; }
+        
+        public FileProcessor FileProcessor { get; private set; }
+    }
+
+    public static class BuilderExtensions
+    {
+        public static IBuilder<TReader> SkipLines<TReader>(this IBuilder<TReader> builder, int lines)
+        {
+            builder.FileProcessor.Skip = lines;
+
+            return builder;
+        }
+    }
+
+    public static class TinyCsv
+    {
+        public static IBuilder<StringLineReader> FromCommaSeparatedString(string input, char[] quoteCharacters = null)
+        {
+            var lineReader = new StringLineReader(input);
+            var lineProcessor = new LineProcessor(',', quoteCharacters);
+            var fileProcessor = new FileProcessor(lineReader, lineProcessor);
+
+            var builder = new Builder<StringLineReader>(lineReader, lineProcessor, fileProcessor);
+
+            return builder;
         }
     }
 

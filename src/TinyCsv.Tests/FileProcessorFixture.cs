@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Should;
@@ -42,6 +43,12 @@ namespace TinyCsv.Tests
 
             // Then
             reader.Disposed.ShouldBeTrue();
+        }
+
+        [Fact]
+        public async Task Should_skip_lines_if_set()
+        {
+            throw new NotImplementedException();
         }
     }
 }
