@@ -134,6 +134,11 @@ namespace TinyCsv
             var lines = numberOfLines.HasValue ? new List<IEnumerable<string>>(numberOfLines.Value) : new List<IEnumerable<string>>();
             string current = null;
 
+            for (var skipIndex = 0; skipIndex < this.Skip; skipIndex++)
+            {
+                await this._reader.GetNextLine();
+            }
+
             do
             {
                 current = await this._reader.GetNextLine();

@@ -48,7 +48,20 @@ namespace TinyCsv.Tests
         [Fact]
         public async Task Should_skip_lines_if_set()
         {
-            throw new NotImplementedException();
+            // Given
+            var lines = new []{ "Nope", "Nope2", "One", "Two", "Three" };
+            var reader = new FakeLineReader(lines);
+            var processor = new FakeLineProcessor();
+            var fileProcessor = new FileProcessor(reader, processor) { Skip = 2 };
+
+            // When
+            var result = (await fileProcessor.Process()).ToArray();
+
+            // Then
+            processor.PassedLines.Count.ShouldEqual(3);
+            processor.PassedLines[0].ShouldEqual("One");
+            processor.PassedLines[1].ShouldEqual("Two");
+            processor.PassedLines[2].ShouldEqual("Three");
         }
     }
 }
