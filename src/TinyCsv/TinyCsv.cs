@@ -263,16 +263,23 @@ namespace TinyCsv
 
     public interface IBuilder
     {
+        ILineProcessor LineProcessor { get; }
+    }
 
+    public class Builder : IBuilder
+    {
+        public Builder(ILineProcessor lineProcessor)
+        {
+            LineProcessor = lineProcessor;
+        }
+
+        public ILineProcessor LineProcessor { get; private set; }
     }
 
     public interface IBuilder<out TReader> : IBuilder
     {
-        TReader LineReader { get; }
-
-        ILineProcessor LineProcessor { get; }
-        
         FileProcessor FileProcessor { get; }
+        TReader LineReader { get; }
     }
 
     public class Builder<TReader> : IBuilder<TReader>
@@ -293,67 +300,47 @@ namespace TinyCsv
 
     public static class BuilderExtensions
     {
+        public static IBuilder<StringLineReader> FromString(this Builder builder, string source)
+        {
+            var lineReader = new StringLineReader(source);
+
+            return new Builder<StringLineReader>(lineReader, builder.LineProcessor, new FileProcessor(lineReader, builder.LineProcessor));
+        }
+
+        public static IBuilder<StreamLineReader> FromStream(this Builder builder, Stream source)
+        {
+            var lineReader = new StreamLineReader(source);
+
+            return new Builder<StreamLineReader>(lineReader, builder.LineProcessor, new FileProcessor(lineReader, builder.LineProcessor));
+        }
+
         public static IBuilder<TReader> SkipLines<TReader>(this IBuilder<TReader> builder, int lines)
         {
             builder.FileProcessor.Skip = lines;
 
             return builder;
         }
+
+        public static Task<IEnumerable<IEnumerable<string>>> Process<TReader>(this IBuilder<TReader> builder)
+        {
+            return builder.FileProcessor.Process();
+        }
     }
 
     public static class TinyCsv
     {
-        public static IBuilder<StringLineReader> FromCommaSeparatedString(string input, char[] quoteCharacters = null)
+        public static Builder CommaSeparated(char[] quoteCharacters = null)
         {
-            var lineReader = new StringLineReader(input);
             var lineProcessor = new LineProcessor(',', quoteCharacters);
-            var fileProcessor = new FileProcessor(lineReader, lineProcessor);
 
-            var builder = new Builder<StringLineReader>(lineReader, lineProcessor, fileProcessor);
-
-            return builder;
-        }
-    }
-
-    public static class Process
-    {
-        public static Task<IEnumerable<IEnumerable<string>>> FromCommaSeparatedString(string input, char[] quoteCharacters = null)
-        {
-            var reader = new StringLineReader(input);
-            var processor = new LineProcessor(',', quoteCharacters);
-
-            return Execute(reader, processor);
-        }        
-        
-        public static Task<IEnumerable<IEnumerable<string>>> FromTabSeparatedString(string input, char[] quoteCharacters = null)
-        {
-            var reader = new StringLineReader(input);
-            var processor = new LineProcessor('\t', quoteCharacters);
-
-            return Execute(reader, processor);
+            return new Builder(lineProcessor);
         }
 
-        public static Task<IEnumerable<IEnumerable<string>>> FromCommaSeparatedStream(Stream input, Encoding encoding = null, char[] quoteCharacters = null)
+        public static Builder TabSeparated(char[] quoteCharacters = null)
         {
-            var reader = new StreamLineReader(input);
-            var processor = new LineProcessor(',', quoteCharacters);
+            var lineProcessor = new LineProcessor('\t', quoteCharacters);
 
-            return Execute(reader, processor);
-        }
-
-        public static Task<IEnumerable<IEnumerable<string>>> FromTabSeparatedString(Stream input, Encoding encoding = null, char[] quoteCharacters = null)
-        {
-            var reader = new StreamLineReader(input);
-            var processor = new LineProcessor('\t', quoteCharacters);
-
-            return Execute(reader, processor);
-        }
-
-        private static Task<IEnumerable<IEnumerable<string>>> Execute(ILineReader reader, ILineProcessor processor)
-        {
-            var fileProcessor = new FileProcessor(reader, processor);
-
-            return fileProcessor.Process();
+            return new Builder(lineProcessor);
         }
     }
 }
