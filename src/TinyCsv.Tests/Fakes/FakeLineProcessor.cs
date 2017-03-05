@@ -17,5 +17,8 @@ namespace TinyCsv.Tests.Fakes
 
             return line.Split(',');
         }
+
+        public string ReplaceBlankValuesWith { get; set; }
+        public bool ReplaceNullValueWithActualNull { get; set; }
     }
 }

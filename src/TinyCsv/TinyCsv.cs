@@ -159,6 +159,8 @@ namespace TinyCsv
     public interface ILineProcessor
     {
         IEnumerable<string> Process(string line);
+        string ReplaceBlankValuesWith { get; set; }
+        bool ReplaceNullValueWithActualNull { get; set; }
     }
 
     public class LineProcessor : ILineProcessor
@@ -171,10 +173,17 @@ namespace TinyCsv
 
         public int SkipLines { get; set; }
 
+        public string ReplaceBlankValuesWith { get; set; }
+
+        public bool ReplaceNullValueWithActualNull { get; set; }
+
         public LineProcessor(char separator, char[] quoteCharacters = null)
         {
             this._separator = separator;
             this._quoteCharacters = quoteCharacters ?? DefaultQuoteCharacters;
+
+            this.ReplaceBlankValuesWith = null;
+            this.ReplaceNullValueWithActualNull = false;
         }
 
         public IEnumerable<string> Process(string line)
@@ -317,6 +326,20 @@ namespace TinyCsv
         public static IBuilder<TReader> SkipLines<TReader>(this IBuilder<TReader> builder, int lines)
         {
             builder.FileProcessor.Skip = lines;
+
+            return builder;
+        }
+
+        public static IBuilder<TReader> ReplaceBlankValuesWith<TReader>(this IBuilder<TReader> builder, string value)
+        {
+            builder.LineProcessor.ReplaceBlankValuesWith = value;
+
+            return builder;
+        }
+
+        public static IBuilder<TReader> ReplaceNullValueWithActualNull<TReader>(this IBuilder<TReader> builder)
+        {
+            builder.LineProcessor.ReplaceNullValueWithActualNull = true;
 
             return builder;
         }
